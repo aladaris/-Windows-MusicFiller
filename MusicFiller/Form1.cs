@@ -76,16 +76,6 @@ namespace MusicFiller
             {
                 MessageBox.Show("Error accediendo a la Base de Datos\n" + ex.ToString());
             }
-            // Creacion del arbol de directorios
-            //this.treeView_Library.BeginUpdate();
-            //this.treeView_Library.Nodes.Clear();
-            //this.treeView_Library.Nodes.Add(new TreeNode("1"));
-            //this.treeView_Library.Nodes[0].Nodes.Add("1.1");
-            //this.treeView_Library.Nodes[0].Nodes.Add("1.2");
-            //this.treeView_Library.Nodes[0].Nodes.Add("1.3");
-            //this.treeView_Library.Nodes[0].Nodes.Add("1.4");
-            //this.treeView_Library.Nodes.Add("2");
-            //this.treeView_Library.EndUpdate();
             ((System.ComponentModel.ISupportInitialize)(DBHandler.dSet)).EndInit();
 
             //TreeView
@@ -110,7 +100,6 @@ namespace MusicFiller
                 int copiedSize = 0; // Tamaño de lo que se ha copiado ya
                 int randDirID = 0; // Declarado fuera para evitar redeclaracion en el bucle
                 int randFileID = 0; // IDEM UP
-                //int ProgressPerc; // IDEM UP -- Porcentaje del proceso
                 String fullPath, fileName; // IDEM UP
                 int fSize;
                 int nFallos = 0, maxFallos = 100; // Numero de fallos (fichero elegido y no copiado) seguidos y el maximo de estos para que el bucle se detenga
@@ -131,8 +120,6 @@ namespace MusicFiller
                     // randFileID empieza en 0 porque se utiliza como indice en la tabla del DataSet
                     // al contrario que ranDirID que se utiliza para seleccionar mediante el campo "ID".
                     randFileID = randGen.Next(0, DBHandler.dSet.Tables["files"].Select("dirID = " + randDirID.ToString()).Length);
-                    //MessageBox.Show("Random entre (" + "1" + ", " + DBHandler.dSet.Tables["directories"].Rows.Count.ToString() + ")"); // DEBUG
-                    //MessageBox.Show("ranDirID = " + randDirID.ToString()); // DEBUG
 
                     // Obtenemos la informacion necesaria del fichero seleccionado
                     fileName = DBHandler.dSet.Tables["files"].Select("dirID = " + randDirID.ToString())[randFileID]["fileName"].ToString();
@@ -142,16 +129,13 @@ namespace MusicFiller
                     fullPath = DBHandler.dSet.Tables["directories"].Select("dID = " + randDirID.ToString())[0]["dirPath"].ToString();
                     fullPath += "\\" + fileName;
 
-                    //MessageBox.Show("UFFFFFFFFFFF!");       // DEBUG
                     // Si existe el fichero a copiar
                     // y no existe un fichero con el mismo nombre en el directorio de destino
                     // y el fichero cabe en el espacio restante de totalSize (es decir totalSize - copiedSize)
                     // => Copiar el fichero seleccionado en el directorio de destino
                     if ((File.Exists(fullPath)) && (!File.Exists(this.textBox_OutPutDir.Text + "\\" + fileName)) && ((totalSize - copiedSize) >= (fSize / 1024)))
                     {
-                        //MessageBox.Show("CHE!");       // DEBUG
                         File.Copy(fullPath, this.textBox_OutPutDir.Text + "\\" + fileName);
-                        //MessageBox.Show("File.Copy("+fullPath+", "+this.textBox_OutPutDir.Text + "\\" + fileName+");");
                         nFallos = 0;
                         copiedSize += Convert.ToInt32(fSize / 1024);
                     }
@@ -162,18 +146,16 @@ namespace MusicFiller
                         {
                             MessageBox.Show("nFallos = " + nFallos.ToString());       // DEBUG
                             break; // Evitamos caer en un bucle infinito,
-                            // como por ejemplo: El espacio total ocupado por la biblioteca es menor que el que se ha especificado (para ser rellenado).
+                            // como por ejemplo: El espacio total ocupado por la biblioteca es menor que el
+                            // que se ha especificado (para ser rellenado).
                         }
                     }
-                    //MessageBox.Show("ÑÑÑÑÑÑÑÑÑÑÑA!");       // DEBUG
                     int denominador = (int) (totalSize / 100); // Evitemos DIVIDIR POR CERO
                     if (denominador <= 0)
                         denominador = 1;
                     int ProgressPerc = (int)( copiedSize / denominador);
-                    //MessageBox.Show("ÑEEEEEEEEEEEEE!");       // DEBUG
                     backgroundWorker_CopyProgress.ReportProgress(ProgressPerc);
                 }
-                //MessageBox.Show("PUG!");       // DEBUG
                 backgroundWorker_CopyProgress.ReportProgress(100);
             }
         }
@@ -199,37 +181,59 @@ namespace MusicFiller
         }
 
         
-        private void fillTreeView(String dir, TreeNode parent)
+        private void fillTreeView(String parentDir, TreeNode parentNode)
         {
-            DirectoryInfo directorio = new DirectoryInfo(dir);
-
-            //MessageBox.Show("dir = " + dir + ", parent = " + parent.Text + ", nDirs = " + directorio.GetDirectories().Length.ToString());
-
-            foreach (DirectoryInfo dInf in directorio.GetDirectories())
+            // TODO: Encontrar la manera de ir elimiando en cada llamda recursiva las filas que ya han sido añadidas
+            //       para evitar que este 'foreach' lea desde el principio cada vez.
+            foreach (DataRow dir in DBHandler.dSet.Tables["directories"].Rows)
             {
-                //MessageBox.Show(dInf.FullName);
-
-                //if (DBHandler.dSet.Tables["directories"].Select("dirPath = " + dInf.FullName).Length == 1)
-                if (isDirInDB(dInf.FullName))
+                // TODO: Evitar este bucle for?¿
+                String[] slicedPath = dir["dirPath"].ToString().Split('\\');
+                String dirName = slicedPath[slicedPath.Length - 1]; // EL ultimo elemento del path es el nombre del directorio
+                String parentsPath = String.Empty;
+                for (int i = 0; i < slicedPath.Length - 1; i++)
                 {
-                    //MessageBox.Show("Añadiendo nodo " + dInf.Name);
-
-                    TreeNode newNode = new TreeNode(dInf.Name);
-                    fillTreeView(dInf.FullName, newNode);
-                    parent.Nodes.Add(newNode);
+                    parentsPath += slicedPath[i];
+                    if ((i != slicedPath.Length - 2)&&(slicedPath.Length > 1))
+                        parentsPath += "\\";
+                }
+                if ((isParent(parentDir, dir["dirPath"].ToString())) && (dir["dirPath"].ToString() != parentDir))
+                {
+                    TreeNode newNode = new TreeNode(dirName);
+                    fillTreeView(dir["dirPath"].ToString(), newNode);
+                    parentNode.Nodes.Add(newNode);
                 }
             }
         }
 
-        private bool isDirInDB(String dir)
+        private bool isParent(String parentDir, String dir)
         {
-            foreach (DataRow d in DBHandler.dSet.Tables["directories"].Rows)
+            String[] slicedParent = parentDir.Split('\\');
+            String[] slicedDir = dir.Split('\\');
+
+            int levelDiference; // TODO: Mejorar esto ...
+            if (slicedParent[slicedParent.Length - 1] == "") // Por alguna razon a veces se añade un elemento "" al array
+                levelDiference = 0;
+            else
+                levelDiference = -1;
+
+
+            // El numero de niveles del padre tien que ser directorio.levels - 1
+            if (slicedParent.Length == (slicedDir.Length + levelDiference))
             {
-                if (dir == d["dirPath"].ToString())
-                    return true;
+                for (int i = 0; i < slicedDir.Length - 1; i++)
+                {
+                    if (slicedParent[i] != slicedDir[i])
+                        return false; // La ruta no coincide
+                }
             }
-            return false;
+            else
+                return false; // Los tamaños son invalidos
+            return true; // 'parentDir' es padre de 'dir'
         }
+
+
+
 
     }
 
