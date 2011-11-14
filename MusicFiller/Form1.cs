@@ -57,6 +57,7 @@ namespace MusicFiller
                 // Carga de datos en el DataSet
                 DBHandler.sqlDA = new System.Data.SQLite.SQLiteDataAdapter("SELECT * FROM directories ORDER BY dID", DBHandler.sqlCon);
                 DBHandler.sqlDA.Fill(DBHandler.dSet, "directories");
+                //DBHandler.sqlDA = new System.Data.SQLite.SQLiteDataAdapter("SELECT * FROM directories ORDER BY dID", DBHandler.sqlCon);
                 DBHandler.sqlDA = new System.Data.SQLite.SQLiteDataAdapter("SELECT * FROM files ORDER BY fID", DBHandler.sqlCon);
                 DBHandler.sqlDA.Fill(DBHandler.dSet, "files");
                 // Obtención de comandos de los DataAdapters
@@ -78,12 +79,12 @@ namespace MusicFiller
             }
             ((System.ComponentModel.ISupportInitialize)(DBHandler.dSet)).EndInit();
 
-            //TreeView
-            TreeNode rootNode = new TreeNode("J:\\");
-            treeView_Library.BeginUpdate();
-            fillTreeView("J:\\", rootNode);
-            treeView_Library.Nodes.Add(rootNode);
-            treeView_Library.EndUpdate();
+            this.rootNode = new TreeNode("J:\\");
+            this.nDir = 0;
+            backgroundWorker_treeFiller.RunWorkerAsync();
+            // TODO: Dar opcion a cancelar la carga del TreeView, lo que implicaria detener
+            // 'backgroundWorker_treeFiller', dejar de mostrar la progressBar, el texto y el TreeView
+            // lo que a su vez implica encoger el alto de la ventana para rellenar el hueco dejado por el treeView.
         }
 
         private void button_Start_Click(object sender, EventArgs e)
@@ -93,7 +94,6 @@ namespace MusicFiller
 
         private void backgroundWorker_CopyProgress_DoWork(object sender, DoWorkEventArgs e)
         {
-            //MessageBox.Show(randGen.Next().ToString()); // DEBUG
             if ((DBHandler.dSet.Tables["directories"].Rows.Count > 0) && (DBHandler.dSet.Tables["files"].Rows.Count > 0))
             {
                 System.Random randGen = new Random();
@@ -102,7 +102,7 @@ namespace MusicFiller
                 int randFileID = 0; // IDEM UP
                 String fullPath, fileName; // IDEM UP
                 int fSize;
-                int nFallos = 0, maxFallos = 100; // Numero de fallos (fichero elegido y no copiado) seguidos y el maximo de estos para que el bucle se detenga
+                int nFallos = 0, maxFallos = 10000; // Numero de fallos (fichero elegido y no copiado) seguidos y el maximo de estos para que el bucle se detenga
                 int totalSize = System.Convert.ToInt32(this.textBox_fillSpace.Text);
 
                 this.button_Exit.Enabled = false;
@@ -112,7 +112,6 @@ namespace MusicFiller
                 this.textBox_fillSpace.Enabled = false;
                 this.textBox_OutPutDir.Enabled = false;
 
-                //MessageBox.Show("WTF?");       // DEBUG
                 while (copiedSize <= totalSize)
                 {
                     // Generamos los IDs aleatorios para cada tabla
@@ -144,7 +143,6 @@ namespace MusicFiller
                         nFallos++;
                         if (nFallos >= maxFallos)
                         {
-                            MessageBox.Show("nFallos = " + nFallos.ToString());       // DEBUG
                             break; // Evitamos caer en un bucle infinito,
                             // como por ejemplo: El espacio total ocupado por la biblioteca es menor que el
                             // que se ha especificado (para ser rellenado).
@@ -180,16 +178,41 @@ namespace MusicFiller
             this.label_progressPercentage.Text = "0 %";
         }
 
+        private void backgroundWorker_treeFiller_DoWork(object sender, DoWorkEventArgs e)
+        {
+            this.button_Library.Enabled = false;
+            this.button_Start.Enabled = false;
+
+            treeView_Library.BeginUpdate();
+            fillTreeView("J:\\", rootNode);
+            treeView_Library.EndUpdate();
+
+            this.button_Start.Enabled = true;
+            this.button_Library.Enabled = true;
+        }
+
+        private void backgroundWorker_treeFiller_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            this.progressBar_treeFill.Value = e.ProgressPercentage;
+            this.label_treeFill.Text = "Cargando biblioteca: "+e.ProgressPercentage.ToString()+"%";
+            this.progressBar_treeFill.Refresh();
+        }
+
+        private void backgroundWorker_treeFiller_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            this.treeView_Library.Nodes.Add(rootNode);
+            // TODO: Ocultar progressBar y hacer mas alto el treeView
+        }
         
         private void fillTreeView(String parentDir, TreeNode parentNode)
         {
-            // TODO: Encontrar la manera de ir elimiando en cada llamda recursiva las filas que ya han sido añadidas
-            //       para evitar que este 'foreach' lea desde el principio cada vez.
+            // TODO: Encontrar la manera de no tener que recorrer toda la tabla en cada llamda recursiva
+            
             foreach (DataRow dir in DBHandler.dSet.Tables["directories"].Rows)
             {
                 // TODO: Evitar este bucle for?¿
                 String[] slicedPath = dir["dirPath"].ToString().Split('\\');
-                String dirName = slicedPath[slicedPath.Length - 1]; // EL ultimo elemento del path es el nombre del directorio
+                String dirName = slicedPath[slicedPath.Length - 1]; // El ultimo elemento del path es el nombre del directorio
                 String parentsPath = String.Empty;
                 for (int i = 0; i < slicedPath.Length - 1; i++)
                 {
@@ -200,11 +223,24 @@ namespace MusicFiller
                 if ((isParent(parentDir, dir["dirPath"].ToString())) && (dir["dirPath"].ToString() != parentDir))
                 {
                     TreeNode newNode = new TreeNode(dirName);
-                    fillTreeView(dir["dirPath"].ToString(), newNode);
+                    String dirPath = dir["dirPath"].ToString();
+
+                    // Actualizar BackgroundWorker
+                    nDir++;
+                    int denominador = (int)(DBHandler.dSet.Tables["directories"].Rows.Count / 100);
+                    if (denominador <= 0) // Evitemos DIVIDIR POR CERO
+                        denominador = 1;
+                    int ProgressPerc = (int)(nDir / denominador);
+                    if (ProgressPerc > 100)
+                        ProgressPerc = 100;
+                    backgroundWorker_treeFiller.ReportProgress(ProgressPerc);
+                    // Llamada recursiva y "concatenacion" de nodos
+                    fillTreeView(dirPath, newNode);
                     parentNode.Nodes.Add(newNode);
                 }
             }
         }
+        
 
         private bool isParent(String parentDir, String dir)
         {
@@ -216,8 +252,6 @@ namespace MusicFiller
                 levelDiference = 0;
             else
                 levelDiference = -1;
-
-
             // El numero de niveles del padre tien que ser directorio.levels - 1
             if (slicedParent.Length == (slicedDir.Length + levelDiference))
             {
@@ -231,8 +265,6 @@ namespace MusicFiller
                 return false; // Los tamaños son invalidos
             return true; // 'parentDir' es padre de 'dir'
         }
-
-
 
 
     }

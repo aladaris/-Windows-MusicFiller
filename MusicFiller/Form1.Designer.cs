@@ -40,11 +40,14 @@
             this.progressBar_CopyProgress = new System.Windows.Forms.ProgressBar();
             this.backgroundWorker_CopyProgress = new System.ComponentModel.BackgroundWorker();
             this.label_progressPercentage = new System.Windows.Forms.Label();
+            this.backgroundWorker_treeFiller = new System.ComponentModel.BackgroundWorker();
+            this.progressBar_treeFill = new System.Windows.Forms.ProgressBar();
+            this.label_treeFill = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // button_Library
             // 
-            this.button_Library.Location = new System.Drawing.Point(106, 24);
+            this.button_Library.Location = new System.Drawing.Point(12, 455);
             this.button_Library.Name = "button_Library";
             this.button_Library.Size = new System.Drawing.Size(75, 23);
             this.button_Library.TabIndex = 11;
@@ -101,9 +104,9 @@
             // treeView_Library
             // 
             this.treeView_Library.CheckBoxes = true;
-            this.treeView_Library.Location = new System.Drawing.Point(106, 70);
+            this.treeView_Library.Location = new System.Drawing.Point(15, 12);
             this.treeView_Library.Name = "treeView_Library";
-            this.treeView_Library.Size = new System.Drawing.Size(253, 221);
+            this.treeView_Library.Size = new System.Drawing.Size(426, 220);
             this.treeView_Library.TabIndex = 12;
             // 
             // label_fillSpace
@@ -145,11 +148,36 @@
             this.label_progressPercentage.TabIndex = 16;
             this.label_progressPercentage.Text = "0 %";
             // 
+            // backgroundWorker_treeFiller
+            // 
+            this.backgroundWorker_treeFiller.WorkerReportsProgress = true;
+            this.backgroundWorker_treeFiller.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker_treeFiller_DoWork);
+            this.backgroundWorker_treeFiller.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker_treeFiller_RunWorkerCompleted);
+            this.backgroundWorker_treeFiller.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker_treeFiller_ProgressChanged);
+            // 
+            // progressBar_treeFill
+            // 
+            this.progressBar_treeFill.Location = new System.Drawing.Point(15, 262);
+            this.progressBar_treeFill.Name = "progressBar_treeFill";
+            this.progressBar_treeFill.Size = new System.Drawing.Size(426, 23);
+            this.progressBar_treeFill.TabIndex = 17;
+            // 
+            // label_treeFill
+            // 
+            this.label_treeFill.AutoSize = true;
+            this.label_treeFill.Location = new System.Drawing.Point(12, 246);
+            this.label_treeFill.Name = "label_treeFill";
+            this.label_treeFill.Size = new System.Drawing.Size(121, 13);
+            this.label_treeFill.TabIndex = 18;
+            this.label_treeFill.Text = "Cargando biblioteca: 0%";
+            // 
             // Form_Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(453, 500);
+            this.Controls.Add(this.label_treeFill);
+            this.Controls.Add(this.progressBar_treeFill);
             this.Controls.Add(this.label_progressPercentage);
             this.Controls.Add(this.progressBar_CopyProgress);
             this.Controls.Add(this.textBox_fillSpace);
@@ -173,6 +201,9 @@
 
         #endregion
 
+        private System.Windows.Forms.TreeNode rootNode; // Nodo raiz del TreeView
+        private int nDir; // Utilizada para calcular el porcentaje del rellenado del treeView
+
         private System.Windows.Forms.Button button_Library;
         private System.Windows.Forms.Button button_Exit;
         private System.Windows.Forms.Button button_Start;
@@ -185,6 +216,9 @@
         private System.Windows.Forms.ProgressBar progressBar_CopyProgress;
         private System.ComponentModel.BackgroundWorker backgroundWorker_CopyProgress;
         private System.Windows.Forms.Label label_progressPercentage;
+        private System.ComponentModel.BackgroundWorker backgroundWorker_treeFiller;
+        private System.Windows.Forms.ProgressBar progressBar_treeFill;
+        private System.Windows.Forms.Label label_treeFill;
 
     }
 }
