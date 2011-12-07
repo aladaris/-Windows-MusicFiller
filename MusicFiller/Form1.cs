@@ -79,7 +79,7 @@ namespace MusicFiller
             }
             ((System.ComponentModel.ISupportInitialize)(DBHandler.dSet)).EndInit();
 
-            this.rootNode = new TreeNode("J:\\");
+            this.rootNode = new TreeNode("Biblioteca");
             this.nDir = 0;
             backgroundWorker_treeFiller.RunWorkerAsync();
             // TODO: Dar opcion a cancelar la carga del TreeView, lo que implicaria detener
@@ -152,7 +152,8 @@ namespace MusicFiller
                     if (denominador <= 0)
                         denominador = 1;
                     int ProgressPerc = (int)( copiedSize / denominador);
-                    backgroundWorker_CopyProgress.ReportProgress(ProgressPerc);
+                    if ((ProgressPerc >= progressBar_CopyProgress.Minimum) && (ProgressPerc <= progressBar_CopyProgress.Maximum))
+                        backgroundWorker_CopyProgress.ReportProgress(ProgressPerc);
                 }
                 backgroundWorker_CopyProgress.ReportProgress(100);
             }
@@ -184,7 +185,7 @@ namespace MusicFiller
             this.button_Start.Enabled = false;
 
             treeView_Library.BeginUpdate();
-            fillTreeView("J:\\", rootNode);
+            fillTreeView(-1, rootNode);
             treeView_Library.EndUpdate();
 
             this.button_Start.Enabled = true;
@@ -204,68 +205,25 @@ namespace MusicFiller
             // TODO: Ocultar progressBar y hacer mas alto el treeView
         }
         
-        private void fillTreeView(String parentDir, TreeNode parentNode)
+        private void fillTreeView(int parentDir, TreeNode parentNode)
         {
-            // TODO: Encontrar la manera de no tener que recorrer toda la tabla en cada llamda recursiva
-            
-            foreach (DataRow dir in DBHandler.dSet.Tables["directories"].Rows)
+            foreach (DataRow dir in DBHandler.dSet.Tables["directories"].Select("fatherID = " + parentDir.ToString()))
             {
-                // TODO: Evitar este bucle for?¿
-                String[] slicedPath = dir["dirPath"].ToString().Split('\\');
-                String dirName = slicedPath[slicedPath.Length - 1]; // El ultimo elemento del path es el nombre del directorio
-                String parentsPath = String.Empty;
-                for (int i = 0; i < slicedPath.Length - 1; i++)
-                {
-                    parentsPath += slicedPath[i];
-                    if ((i != slicedPath.Length - 2)&&(slicedPath.Length > 1))
-                        parentsPath += "\\";
-                }
-                if ((isParent(parentDir, dir["dirPath"].ToString())) && (dir["dirPath"].ToString() != parentDir))
-                {
-                    TreeNode newNode = new TreeNode(dirName);
-                    String dirPath = dir["dirPath"].ToString();
-
-                    // Actualizar BackgroundWorker
-                    nDir++;
-                    int denominador = (int)(DBHandler.dSet.Tables["directories"].Rows.Count / 100);
-                    if (denominador <= 0) // Evitemos DIVIDIR POR CERO
-                        denominador = 1;
-                    int ProgressPerc = (int)(nDir / denominador);
-                    if (ProgressPerc > 100)
-                        ProgressPerc = 100;
+                TreeNode newNode = new TreeNode(dir["dirName"].ToString());
+                nDir++;
+                // Actualizar BackgroundWorker
+                int denominador = (int)(DBHandler.dSet.Tables["directories"].Rows.Count / 100); // Evitemos DIVIDIR POR CERO
+                if (denominador <= 0)
+                    denominador = 1;
+                int ProgressPerc = (int)(nDir / denominador);
+                if ((ProgressPerc >= progressBar_treeFill.Minimum)&&(ProgressPerc <= progressBar_treeFill.Maximum))
                     backgroundWorker_treeFiller.ReportProgress(ProgressPerc);
-                    // Llamada recursiva y "concatenacion" de nodos
-                    fillTreeView(dirPath, newNode);
-                    parentNode.Nodes.Add(newNode);
-                }
+                // Llamada recursiva y "concatenacion" de nodos
+                fillTreeView(Convert.ToInt32(dir["dID"]), newNode);
+                parentNode.Nodes.Add(newNode);
             }
+            backgroundWorker_treeFiller.ReportProgress(100);
         }
-        
-
-        private bool isParent(String parentDir, String dir)
-        {
-            String[] slicedParent = parentDir.Split('\\');
-            String[] slicedDir = dir.Split('\\');
-
-            int levelDiference; // TODO: Mejorar esto ...
-            if (slicedParent[slicedParent.Length - 1] == "") // Por alguna razon a veces se añade un elemento "" al array
-                levelDiference = 0;
-            else
-                levelDiference = -1;
-            // El numero de niveles del padre tien que ser directorio.levels - 1
-            if (slicedParent.Length == (slicedDir.Length + levelDiference))
-            {
-                for (int i = 0; i < slicedDir.Length - 1; i++)
-                {
-                    if (slicedParent[i] != slicedDir[i])
-                        return false; // La ruta no coincide
-                }
-            }
-            else
-                return false; // Los tamaños son invalidos
-            return true; // 'parentDir' es padre de 'dir'
-        }
-
 
     }
 

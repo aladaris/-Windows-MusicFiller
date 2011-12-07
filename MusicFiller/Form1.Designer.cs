@@ -160,6 +160,8 @@
             this.progressBar_treeFill.Location = new System.Drawing.Point(15, 262);
             this.progressBar_treeFill.Name = "progressBar_treeFill";
             this.progressBar_treeFill.Size = new System.Drawing.Size(426, 23);
+            this.progressBar_treeFill.Step = 1;
+            this.progressBar_treeFill.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.progressBar_treeFill.TabIndex = 17;
             // 
             // label_treeFill
