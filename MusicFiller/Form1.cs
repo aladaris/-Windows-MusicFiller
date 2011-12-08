@@ -195,14 +195,15 @@ namespace MusicFiller
         private void backgroundWorker_treeFiller_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             this.progressBar_treeFill.Value = e.ProgressPercentage;
-            this.label_treeFill.Text = "Cargando biblioteca: "+e.ProgressPercentage.ToString()+"%";
             this.progressBar_treeFill.Refresh();
         }
 
         private void backgroundWorker_treeFiller_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            this.button_Library.Visible = true;
+            this.progressBar_treeFill.Visible = false;
+
             this.treeView_Library.Nodes.Add(rootNode);
-            // TODO: Ocultar progressBar y hacer mas alto el treeView
         }
         
         private void fillTreeView(int parentDir, TreeNode parentNode)
@@ -210,19 +211,50 @@ namespace MusicFiller
             foreach (DataRow dir in DBHandler.dSet.Tables["directories"].Select("fatherID = " + parentDir.ToString()))
             {
                 TreeNode newNode = new TreeNode(dir["dirName"].ToString());
+                newNode.Tag = dir["dID"].ToString(); // Almacenamos en el campo 'tag' del nodo el ID del directorio
+                // Llamada recursiva y "concatenacion" de nodos
+                fillTreeView(Convert.ToInt32(dir["dID"]), newNode);
+                parentNode.Nodes.Add(newNode);
                 nDir++;
                 // Actualizar BackgroundWorker
                 int denominador = (int)(DBHandler.dSet.Tables["directories"].Rows.Count / 100); // Evitemos DIVIDIR POR CERO
                 if (denominador <= 0)
                     denominador = 1;
                 int ProgressPerc = (int)(nDir / denominador);
-                if ((ProgressPerc >= progressBar_treeFill.Minimum)&&(ProgressPerc <= progressBar_treeFill.Maximum))
+                if ((ProgressPerc >= progressBar_treeFill.Minimum) && (ProgressPerc <= progressBar_treeFill.Maximum))
                     backgroundWorker_treeFiller.ReportProgress(ProgressPerc);
-                // Llamada recursiva y "concatenacion" de nodos
-                fillTreeView(Convert.ToInt32(dir["dID"]), newNode);
-                parentNode.Nodes.Add(newNode);
             }
             backgroundWorker_treeFiller.ReportProgress(100);
+        }
+
+        // Al marcar un nodo como 'checked' o 'unchecked', hacemos lo mismo con sus hijos
+        private void treeView_Library_AfterCheck(object sender, TreeViewEventArgs e)
+        {
+            // Si se ha marcado como checked
+            if (e.Node.Checked == true)
+                checkUncheckChilds(e.Node, 0);
+            else
+                checkUncheckChilds(e.Node, 1);
+        }
+
+        // Marca/Desmarca el nodo 'father' y todos sus hijos
+        // checkUncheck = 0 => Check
+        // checkUncheck = 1 => Uncheck
+        private void checkUncheckChilds(TreeNode father, byte checkUncheck)
+        {
+            foreach (TreeNode child in father.Nodes)
+            {
+                switch (checkUncheck)
+                {
+                    case 0:
+                        child.Checked = true;
+                        break;
+                    case 1:
+                        child.Checked = false;
+                        break;
+                }
+                checkUncheckChilds(child, checkUncheck);
+            }
         }
 
     }

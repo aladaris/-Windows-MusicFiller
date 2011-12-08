@@ -42,22 +42,24 @@
             this.label_progressPercentage = new System.Windows.Forms.Label();
             this.backgroundWorker_treeFiller = new System.ComponentModel.BackgroundWorker();
             this.progressBar_treeFill = new System.Windows.Forms.ProgressBar();
-            this.label_treeFill = new System.Windows.Forms.Label();
+            this.groupBox_Library = new System.Windows.Forms.GroupBox();
+            this.groupBox_Library.SuspendLayout();
             this.SuspendLayout();
             // 
             // button_Library
             // 
-            this.button_Library.Location = new System.Drawing.Point(12, 455);
+            this.button_Library.Location = new System.Drawing.Point(14, 319);
             this.button_Library.Name = "button_Library";
-            this.button_Library.Size = new System.Drawing.Size(75, 23);
+            this.button_Library.Size = new System.Drawing.Size(90, 23);
             this.button_Library.TabIndex = 11;
-            this.button_Library.Text = "&Biblioteca";
+            this.button_Library.Text = "Crear &Biblioteca";
             this.button_Library.UseVisualStyleBackColor = true;
+            this.button_Library.Visible = false;
             this.button_Library.Click += new System.EventHandler(this.button_Library_Click);
             // 
             // button_Exit
             // 
-            this.button_Exit.Location = new System.Drawing.Point(366, 455);
+            this.button_Exit.Location = new System.Drawing.Point(392, 485);
             this.button_Exit.Name = "button_Exit";
             this.button_Exit.Size = new System.Drawing.Size(75, 23);
             this.button_Exit.TabIndex = 10;
@@ -67,7 +69,7 @@
             // 
             // button_Start
             // 
-            this.button_Start.Location = new System.Drawing.Point(12, 388);
+            this.button_Start.Location = new System.Drawing.Point(14, 434);
             this.button_Start.Name = "button_Start";
             this.button_Start.Size = new System.Drawing.Size(75, 23);
             this.button_Start.TabIndex = 9;
@@ -78,7 +80,7 @@
             // label_OutputDir
             // 
             this.label_OutputDir.AutoSize = true;
-            this.label_OutputDir.Location = new System.Drawing.Point(12, 310);
+            this.label_OutputDir.Location = new System.Drawing.Point(12, 385);
             this.label_OutputDir.Name = "label_OutputDir";
             this.label_OutputDir.Size = new System.Drawing.Size(88, 13);
             this.label_OutputDir.TabIndex = 6;
@@ -86,7 +88,7 @@
             // 
             // button_OutPutDir
             // 
-            this.button_OutPutDir.Location = new System.Drawing.Point(366, 305);
+            this.button_OutPutDir.Location = new System.Drawing.Point(392, 379);
             this.button_OutPutDir.Name = "button_OutPutDir";
             this.button_OutPutDir.Size = new System.Drawing.Size(75, 23);
             this.button_OutPutDir.TabIndex = 8;
@@ -96,23 +98,24 @@
             // 
             // textBox_OutPutDir
             // 
-            this.textBox_OutPutDir.Location = new System.Drawing.Point(106, 307);
+            this.textBox_OutPutDir.Location = new System.Drawing.Point(106, 382);
             this.textBox_OutPutDir.Name = "textBox_OutPutDir";
-            this.textBox_OutPutDir.Size = new System.Drawing.Size(254, 20);
+            this.textBox_OutPutDir.Size = new System.Drawing.Size(280, 20);
             this.textBox_OutPutDir.TabIndex = 7;
             // 
             // treeView_Library
             // 
             this.treeView_Library.CheckBoxes = true;
-            this.treeView_Library.Location = new System.Drawing.Point(15, 12);
+            this.treeView_Library.Location = new System.Drawing.Point(14, 19);
             this.treeView_Library.Name = "treeView_Library";
-            this.treeView_Library.Size = new System.Drawing.Size(426, 220);
+            this.treeView_Library.Size = new System.Drawing.Size(426, 294);
             this.treeView_Library.TabIndex = 12;
+            this.treeView_Library.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.treeView_Library_AfterCheck);
             // 
             // label_fillSpace
             // 
             this.label_fillSpace.AutoSize = true;
-            this.label_fillSpace.Location = new System.Drawing.Point(103, 351);
+            this.label_fillSpace.Location = new System.Drawing.Point(103, 411);
             this.label_fillSpace.Name = "label_fillSpace";
             this.label_fillSpace.Size = new System.Drawing.Size(144, 13);
             this.label_fillSpace.TabIndex = 13;
@@ -120,16 +123,16 @@
             // 
             // textBox_fillSpace
             // 
-            this.textBox_fillSpace.Location = new System.Drawing.Point(253, 348);
+            this.textBox_fillSpace.Location = new System.Drawing.Point(253, 408);
             this.textBox_fillSpace.Name = "textBox_fillSpace";
-            this.textBox_fillSpace.Size = new System.Drawing.Size(106, 20);
+            this.textBox_fillSpace.Size = new System.Drawing.Size(133, 20);
             this.textBox_fillSpace.TabIndex = 14;
             // 
             // progressBar_CopyProgress
             // 
-            this.progressBar_CopyProgress.Location = new System.Drawing.Point(93, 388);
+            this.progressBar_CopyProgress.Location = new System.Drawing.Point(95, 434);
             this.progressBar_CopyProgress.Name = "progressBar_CopyProgress";
-            this.progressBar_CopyProgress.Size = new System.Drawing.Size(348, 23);
+            this.progressBar_CopyProgress.Size = new System.Drawing.Size(374, 23);
             this.progressBar_CopyProgress.TabIndex = 15;
             // 
             // backgroundWorker_CopyProgress
@@ -142,7 +145,7 @@
             // label_progressPercentage
             // 
             this.label_progressPercentage.AutoSize = true;
-            this.label_progressPercentage.Location = new System.Drawing.Point(90, 414);
+            this.label_progressPercentage.Location = new System.Drawing.Point(92, 460);
             this.label_progressPercentage.Name = "label_progressPercentage";
             this.label_progressPercentage.Size = new System.Drawing.Size(24, 13);
             this.label_progressPercentage.TabIndex = 16;
@@ -157,35 +160,35 @@
             // 
             // progressBar_treeFill
             // 
-            this.progressBar_treeFill.Location = new System.Drawing.Point(15, 262);
+            this.progressBar_treeFill.Location = new System.Drawing.Point(14, 319);
             this.progressBar_treeFill.Name = "progressBar_treeFill";
             this.progressBar_treeFill.Size = new System.Drawing.Size(426, 23);
             this.progressBar_treeFill.Step = 1;
             this.progressBar_treeFill.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.progressBar_treeFill.TabIndex = 17;
             // 
-            // label_treeFill
+            // groupBox_Library
             // 
-            this.label_treeFill.AutoSize = true;
-            this.label_treeFill.Location = new System.Drawing.Point(12, 246);
-            this.label_treeFill.Name = "label_treeFill";
-            this.label_treeFill.Size = new System.Drawing.Size(121, 13);
-            this.label_treeFill.TabIndex = 18;
-            this.label_treeFill.Text = "Cargando biblioteca: 0%";
+            this.groupBox_Library.Controls.Add(this.treeView_Library);
+            this.groupBox_Library.Controls.Add(this.progressBar_treeFill);
+            this.groupBox_Library.Controls.Add(this.button_Library);
+            this.groupBox_Library.Location = new System.Drawing.Point(12, 12);
+            this.groupBox_Library.Name = "groupBox_Library";
+            this.groupBox_Library.Size = new System.Drawing.Size(455, 354);
+            this.groupBox_Library.TabIndex = 19;
+            this.groupBox_Library.TabStop = false;
+            this.groupBox_Library.Text = "  Biblioteca  ";
             // 
             // Form_Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(453, 500);
-            this.Controls.Add(this.label_treeFill);
-            this.Controls.Add(this.progressBar_treeFill);
+            this.ClientSize = new System.Drawing.Size(481, 522);
+            this.Controls.Add(this.groupBox_Library);
             this.Controls.Add(this.label_progressPercentage);
             this.Controls.Add(this.progressBar_CopyProgress);
             this.Controls.Add(this.textBox_fillSpace);
             this.Controls.Add(this.label_fillSpace);
-            this.Controls.Add(this.treeView_Library);
-            this.Controls.Add(this.button_Library);
             this.Controls.Add(this.button_Exit);
             this.Controls.Add(this.button_Start);
             this.Controls.Add(this.label_OutputDir);
@@ -196,6 +199,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Music Filler";
             this.Load += new System.EventHandler(this.Form_Main_Load);
+            this.groupBox_Library.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -220,7 +224,7 @@
         private System.Windows.Forms.Label label_progressPercentage;
         private System.ComponentModel.BackgroundWorker backgroundWorker_treeFiller;
         private System.Windows.Forms.ProgressBar progressBar_treeFill;
-        private System.Windows.Forms.Label label_treeFill;
+        private System.Windows.Forms.GroupBox groupBox_Library;
 
     }
 }
