@@ -80,6 +80,7 @@ namespace MusicFiller
             ((System.ComponentModel.ISupportInitialize)(DBHandler.dSet)).EndInit();
 
             this.rootNode = new TreeNode("Biblioteca");
+            treeView_Library.TopNode = rootNode;
             this.nDir = 0;
             backgroundWorker_treeFiller.RunWorkerAsync();
             // TODO: Dar opcion a cancelar la carga del TreeView, lo que implicaria detener
@@ -94,24 +95,85 @@ namespace MusicFiller
 
         private void backgroundWorker_CopyProgress_DoWork(object sender, DoWorkEventArgs e)
         {
-            if ((DBHandler.dSet.Tables["directories"].Rows.Count > 0) && (DBHandler.dSet.Tables["files"].Rows.Count > 0))
+            if ((DBHandler.dSet.Tables["directories"].Rows.Count > 0) && (DBHandler.dSet.Tables["files"].Rows.Count > 0) /*&& (checkedCount(rootNode) == 0)*/)
             {
+                //MessageBox.Show("ENTRO!"); // DEBUG
                 System.Random randGen = new Random();
                 int copiedSize = 0; // Tamaño de lo que se ha copiado ya
-                int randDirID = 0; // Declarado fuera para evitar redeclaracion en el bucle
-                int randFileID = 0; // IDEM UP
-                String fullPath, fileName; // IDEM UP
-                int fSize;
-                int nFallos = 0, maxFallos = 10000; // Numero de fallos (fichero elegido y no copiado) seguidos y el maximo de estos para que el bucle se detenga
-                int totalSize = System.Convert.ToInt32(this.textBox_fillSpace.Text);
+                int nFallos = 0, maxFallos = 100; // Numero de fallos (fichero elegido y no copiado) seguidos y el maximo de estos para que el bucle se detenga
+                int totalSize = System.Convert.ToInt32(this.textBox_fillSpace.Text) * 1024; // Tamaño a rellenar en KBytes
 
-                this.button_Exit.Enabled = false;
-                this.button_Start.Enabled = false;
-                this.button_OutPutDir.Enabled = false;
-                this.button_Library.Enabled = false;
-                this.textBox_fillSpace.Enabled = false;
-                this.textBox_OutPutDir.Enabled = false;
+                if (totalSize > 0)
+                {
+                    this.button_Exit.Enabled = false;
+                    this.button_Start.Enabled = false;
+                    this.button_OutPutDir.Enabled = false;
+                    this.button_Library.Enabled = false;
+                    this.textBox_fillSpace.Enabled = false;
+                    this.textBox_OutPutDir.Enabled = false;
+                }
 
+                int randDirID, randFile;
+                String DBfileFullPath, outFileFullPath;
+                while ((copiedSize < totalSize)&&(nFallos <= maxFallos))
+                {
+                    // Generamos los IDs aleatorios para cada tabla
+                    randDirID = randGen.Next(1, DBHandler.dSet.Tables["directories"].Rows.Count);
+
+
+                    DataRow dir = DBHandler.dSet.Tables["directories"].Select("dID = " + randDirID.ToString())[0];
+
+                    DataRow[] files = DBHandler.dSet.Tables["files"].Select("dirID = " + randDirID.ToString());
+                    if (files.Length > 0)
+                    {
+                        randFile = randGen.Next(0, files.Length);
+
+                        /*
+                        // Nos aseguramos de no elegir el mismo fichero
+                        int[] copiedFilesPos; // Posiciones dentro del vector 'files' de los ficheros copiados
+                        int filePickFails = 0;
+                        int maxFilePickFails = files.Length + (files.Length / 2);
+                    
+                    
+                        while (
+                        {
+                            if (filePickFails > files.Length)
+                                break;
+                            randFile = randGen.Next(0, files.Length);
+                            filePickFails++;
+                        }
+                        */
+                        //fullPath = DBHandler.dSet.Tables["directories"].Select("dID = " + randDirID.ToString())[0]["dirPath"] + "\\" + files[randFile]["fileName"];
+
+                        bool marcado_ = isCheckedTreeNode(treeView_Library.TopNode, dir["dirName"].ToString());
+                        //MessageBox.Show("isChecked " + dir["dirName"].ToString() + "?: " + marcado_.ToString());
+
+                        DBfileFullPath = DBHandler.dSet.Tables["directories"].Select("dID = " + randDirID.ToString())[0]["dirPath"] + "\\" + files[randFile]["fileName"];
+                        outFileFullPath = this.textBox_OutPutDir.Text + "\\" + files[randFile]["fileName"].ToString();
+                        //MessageBox.Show(DBfileFullPath + " ||| " + outFileFullPath);
+                        if ((File.Exists(DBfileFullPath)) && (!File.Exists(outFileFullPath)) && ((totalSize - copiedSize) >= Convert.ToInt32(files[randFile]["fileSize"])) && (marcado_))
+                        {
+                            //MessageBox.Show("Copiando[" + copiedSize.ToString() + "/" + totalSize.ToString() + "]: " + DBHandler.dSet.Tables["directories"].Select("dID = " + randDirID.ToString())[0]["dirPath"] + "\\" + files[randFile]["fileName"]);
+                            File.Copy(DBfileFullPath, outFileFullPath);
+                            nFallos = 0;
+                            copiedSize += Convert.ToInt32(files[randFile]["fileSize"]);
+                        }
+                        else
+                            nFallos++;
+
+                        int denominador = (int)(totalSize / 100); // Evitemos DIVIDIR POR CERO
+                        if (denominador <= 0)
+                            denominador = 1;
+                        int ProgressPerc = (int)(copiedSize / denominador);
+                        if ((ProgressPerc >= progressBar_CopyProgress.Minimum) && (ProgressPerc <= progressBar_CopyProgress.Maximum))
+                            backgroundWorker_CopyProgress.ReportProgress(ProgressPerc);
+
+
+                    }
+                }
+
+
+/*
                 while (copiedSize <= totalSize)
                 {
                     // Generamos los IDs aleatorios para cada tabla
@@ -155,6 +217,7 @@ namespace MusicFiller
                     if ((ProgressPerc >= progressBar_CopyProgress.Minimum) && (ProgressPerc <= progressBar_CopyProgress.Maximum))
                         backgroundWorker_CopyProgress.ReportProgress(ProgressPerc);
                 }
+*/
                 backgroundWorker_CopyProgress.ReportProgress(100);
             }
         }
@@ -181,15 +244,19 @@ namespace MusicFiller
 
         private void backgroundWorker_treeFiller_DoWork(object sender, DoWorkEventArgs e)
         {
-            this.button_Library.Enabled = false;
-            this.button_Start.Enabled = false;
+            // Sólo rellenaremos el arbol si hay datos en el DataSet
+            if (DBHandler.dSet.Tables["directories"].Rows.Count > 0)
+            {
+            //    this.button_Library.Enabled = false;
+            //    this.button_Start.Enabled = false;
 
-            treeView_Library.BeginUpdate();
-            fillTreeView(-1, rootNode);
-            treeView_Library.EndUpdate();
+                treeView_Library.BeginUpdate();
+                fillTreeView(-1, rootNode);
+                treeView_Library.EndUpdate();
 
-            this.button_Start.Enabled = true;
-            this.button_Library.Enabled = true;
+            //    this.button_Start.Enabled = true;
+            //    this.button_Library.Enabled = true;
+            }
         }
 
         private void backgroundWorker_treeFiller_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -255,6 +322,38 @@ namespace MusicFiller
                 }
                 checkUncheckChilds(child, checkUncheck);
             }
+        }
+
+        // Cuenta los nodos seleccionados
+        private int checkedCount(TreeNode padre)
+        {
+            int result = 0;
+            if (padre.Nodes.Count > 0)
+            {
+                foreach (TreeNode nodo in padre.Nodes)
+                {
+                    if (nodo.Checked)
+                        result++;
+                    result += checkedCount(nodo);
+                }
+            }
+            return result;
+        }
+
+        // Comprueba el nodo "nodeName" esta marcado en el subarbol con raiz "rootNode"
+        private bool isCheckedTreeNode(TreeNode rootNode, String nodeText)
+        {
+            if ((rootNode.Text == nodeText) && (rootNode.Checked))
+                return true;
+            else
+            {
+                foreach (TreeNode hijo in rootNode.Nodes)
+                {
+                    if (isCheckedTreeNode(hijo, nodeText))
+                        return true;
+                }
+            }
+            return false;
         }
 
     }

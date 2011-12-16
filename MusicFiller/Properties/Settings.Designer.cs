@@ -23,6 +23,15 @@ namespace MusicFiller.Properties {
             }
         }
         
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("musicFiller.s3db")]
+        public string DBPath {
+            get {
+                return ((string)(this["DBPath"]));
+            }
+        }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
@@ -32,15 +41,6 @@ namespace MusicFiller.Properties {
             }
             set {
                 this["LibraryPath"] = value;
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("musicFiller.s3db")]
-        public string DBPath {
-            get {
-                return ((string)(this["DBPath"]));
             }
         }
         
